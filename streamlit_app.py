@@ -526,8 +526,10 @@ def main():
         st.markdown("### 🔑 Configuration")
         
         # Vérification de la clé API
+        api_configured = False
         try:
             service = ClaudeService()
+            api_configured = True
             st.markdown("""
             <div style='background: rgba(46, 213, 115, 0.2); padding: 0.8rem; border-radius: 8px; margin: 1rem 0;'>
             ✅ <b>Clé API active</b><br>
@@ -538,11 +540,27 @@ def main():
             st.markdown("""
             <div style='background: rgba(255, 107, 107, 0.2); padding: 0.8rem; border-radius: 8px; margin: 1rem 0;'>
             ❌ <b>Clé API manquante</b><br>
-            <small>Ajoutez votre clé dans .env</small>
+            <small>Sur Streamlit Cloud : Settings → Secrets → Ajouter ANTHROPIC_API_KEY</small>
             </div>
             """, unsafe_allow_html=True)
-            st.code("ANTHROPIC_API_KEY=votre_clé", language="bash")
-            return
+            with st.expander("📝 Comment configurer ?"):
+                st.markdown("""
+                **Sur Streamlit Cloud :**
+                1. Cliquez sur ⚙️ Settings
+                2. Allez dans l'onglet Secrets
+                3. Ajoutez :
+                ```
+                ANTHROPIC_API_KEY = "sk-ant-api03-..."
+                ```
+                4. Save et l'app redémarre
+                
+                **En local :**
+                Créez un fichier `.env` avec :
+                ```
+                ANTHROPIC_API_KEY=sk-ant-api03-...
+                ```
+                """)
+            # Ne pas return, continuer l'affichage de l'interface
         
         st.markdown("---")
         st.markdown("### 🛠️ Stack Technique")
@@ -629,8 +647,12 @@ def main():
         if uploaded_file and st.session_state.cv_text:
             st.markdown('<div class="card-title">🚀 Étape 3 : Analyse</div>', unsafe_allow_html=True)
             
+            # Vérification de la clé API avant d'afficher le bouton
+            if not api_configured:
+                st.error("⚠️ Clé API non configurée. L'analyse ne peut pas être lancée.")
+                st.info("👆 Voir la sidebar pour configurer votre clé API Anthropic")
             # Vérification des essais restants
-            if st.session_state.free_trials <= 0:
+            elif st.session_state.free_trials <= 0:
                 st.error("❌ Vous avez épuisé vos 3 essais gratuits")
                 st.info("🔓 Passez Premium pour des analyses illimitées (9,99€/mois - Bientôt disponible)")
                 if st.button("🔄 Recharger la page (démo)", type="secondary"):
